@@ -10,7 +10,7 @@ import (
 	"google.golang.org/api/option"
 )
 
-func initFirebaseClient(fileName string) *auth.Client {
+func InitFirebaseClient(fileName string) *auth.Client {
 
 	opt := option.WithCredentialsFile(fileName)
 	app, err := firebase.NewApp(context.Background(), nil, opt)
