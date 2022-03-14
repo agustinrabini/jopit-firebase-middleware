@@ -10,9 +10,9 @@ import (
 	"google.golang.org/api/option"
 )
 
-func initFirebaseClient() *auth.Client {
+func initFirebaseClient(fileName string) *auth.Client {
 
-	opt := option.WithCredentialsFile("credentials.json")
+	opt := option.WithCredentialsFile(fileName)
 	app, err := firebase.NewApp(context.Background(), nil, opt)
 	if err != nil {
 
@@ -29,17 +29,17 @@ func initFirebaseClient() *auth.Client {
 }
 
 func AuthWithFirebase(client *auth.Client) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			header := r.Header.Get("HeaderAuthorization")
+			idToken := strings.TrimSpace(strings.Replace(header, "Bearer", "", 1))
+			_, err := client.VerifyIDToken(context.Background(), idToken)
+			if err != nil {
 
-		header := r.Header.Get("HeaderAuthorization")
-		idToken := strings.TrimSpace(strings.Replace(header, "Bearer", "", 1))
-		_, err := client.VerifyIDToken(context.Background(), idToken)
-		if err != nil {
-
-			return
-		}
-		next.ServeHTTP(w, r)
-	})
-
+				return
+			}
+			next.ServeHTTP(w, r)
+		})
+	}
 }
