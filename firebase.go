@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"context"
-	"encoding/json"
 	"log"
 	"net/http"
 	"strings"
@@ -46,22 +45,20 @@ func InitFirebase() {
 	}
 }
 
-func AuthWithFirebase(next http.Handler) func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func AuthWithFirebase(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-			header := r.Header.Get("HeaderAuthorization")
-			idToken := strings.TrimSpace(strings.Replace(header, "Bearer", "", 1))
-			_, err := firebaseClient.AuthClient.VerifyIDToken(context.Background(), idToken)
-			if err != nil {
-				json.NewEncoder(w).Encode(err.Error())
-				w.Write([]byte(err.Error()))
-				w.WriteHeader(http.StatusBadRequest)
-				return
-			}
-			next.ServeHTTP(w, r)
-		})
-	}
+		header := r.Header.Get("HeaderAuthorization")
+		idToken := strings.TrimSpace(strings.Replace(header, "Bearer", "", 1))
+		_, err := firebaseClient.AuthClient.VerifyIDToken(context.Background(), idToken)
+		if err != nil {
+			w.WriteHeader(401)
+			w.Write([]byte("Error getting the token.\n" + err.Error()))
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }
 
 /* func (f *FirebaseClient) Close() error {
