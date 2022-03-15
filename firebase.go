@@ -53,7 +53,7 @@ func AuthWithFirebase(next http.Handler) func(http.Handler) http.Handler {
 			idToken := strings.TrimSpace(strings.Replace(header, "Bearer", "", 1))
 			_, err := firebaseClient.AuthClient.VerifyIDToken(context.Background(), idToken)
 			if err != nil {
-
+				w.WriteHeader(http.StatusBadRequest)
 				return
 			}
 			next.ServeHTTP(w, r)
