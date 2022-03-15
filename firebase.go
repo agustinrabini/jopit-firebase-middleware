@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"net/http"
 	"strings"
@@ -53,6 +54,8 @@ func AuthWithFirebase(next http.Handler) func(http.Handler) http.Handler {
 			idToken := strings.TrimSpace(strings.Replace(header, "Bearer", "", 1))
 			_, err := firebaseClient.AuthClient.VerifyIDToken(context.Background(), idToken)
 			if err != nil {
+				json.NewEncoder(w).Encode(err.Error())
+				w.Write([]byte(err.Error()))
 				w.WriteHeader(http.StatusBadRequest)
 				return
 			}
